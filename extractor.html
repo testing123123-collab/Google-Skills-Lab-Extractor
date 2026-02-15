@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Google Skills Lab Extractor</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+h1{
+color:#38bdf8;
+}
+
+textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+border:none;
+height:200px;
+}
+
+button{
+padding:10px 15px;
+margin:5px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.extract{
+background:#22c55e;
+color:white;
+}
+
+.generate{
+background:#3b82f6;
+color:white;
+}
+
+.copy{
+background:#eab308;
+color:black;
+}
+
+.download{
+background:#ef4444;
+color:white;
+}
+
+.lab{
+background:#1e293b;
+padding:10px;
+margin:10px 0;
+border-radius:6px;
+}
+
+input{
+width:100%;
+padding:6px;
+margin-top:5px;
+margin-bottom:5px;
+border-radius:4px;
+border:none;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>Google Skills Lab Extractor</h1>
+
+<h3>Step 1:</h3>
+Open game page → Press CTRL+U → Copy FULL HTML → Paste below
+
+<textarea id="htmlInput" placeholder="Paste full page HTML here"></textarea>
+
+<button class="extract" onclick="extractLabs()">Extract Labs</button>
+
+<div id="labs"></div>
+
+<button class="generate" onclick="generateJSON()">Generate videoMap.json</button>
+<button class="copy" onclick="copyJSON()">Copy</button>
+<button class="download" onclick="downloadJSON()">Download</button>
+
+<h3>Output:</h3>
+
+<textarea id="output"></textarea>
+
+<script>
+
+let labsData=[];
+
+function extractLabs(){
+
+const html=document.getElementById("htmlInput").value;
+
+if(!html){
+alert("Paste HTML first");
+return;
+}
+
+const parser=new DOMParser();
+const doc=parser.parseFromString(html,"text/html");
+
+const course=doc.querySelector("ql-course");
+
+if(!course){
+alert("ql-course not found");
+return;
+}
+
+const modules=JSON.parse(course.getAttribute("modules"));
+
+labsData=[];
+
+modules.forEach(module=>{
+module.steps.forEach(step=>{
+step.activities.forEach(activity=>{
+
+if(activity.type==="lab"){
+
+labsData.push({
+title:activity.title,
+video:"",
+github:""
+});
+
+}
+
+});
+});
+});
+
+renderLabs();
+
+}
+
+function renderLabs(){
+
+const container=document.getElementById("labs");
+
+container.innerHTML="";
+
+labsData.forEach((lab,index)=>{
+
+container.innerHTML+=`
+
+<div class="lab">
+
+<b>${lab.title}</b>
+
+<br>
+
+YouTube:
+<input onchange="setVideo(${index},this.value)">
+
+GitHub:
+<input onchange="setGithub(${index},this.value)">
+
+</div>
+
+`;
+
+});
+
+}
+
+function setVideo(i,val){
+labsData[i].video=val;
+}
+
+function setGithub(i,val){
+labsData[i].github=val;
+}
+
+function generateJSON(){
+
+const obj={};
+
+labsData.forEach(lab=>{
+
+obj[lab.title]={
+video:lab.video,
+github:lab.github
+};
+
+});
+
+document.getElementById("output").value=
+JSON.stringify(obj,null,2);
+
+}
+
+function copyJSON(){
+
+navigator.clipboard.writeText(
+document.getElementById("output").value
+);
+
+alert("Copied");
+
+}
+
+function downloadJSON(){
+
+const blob=new Blob(
+[document.getElementById("output").value],
+{type:"application/json"}
+);
+
+const a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+a.download="videoMap.json";
+
+a.click();
+
+}
+
+</script>
+
+</body>
+</html>
