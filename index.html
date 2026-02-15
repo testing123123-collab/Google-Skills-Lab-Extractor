@@ -183,21 +183,21 @@ labsData[i].github=val;
 
 function generateJSON(){
 
-const obj={};
+let lines = [];
 
-labsData.forEach(lab=>{
+labsData.forEach(lab => {
 
-obj[lab.title]={
-video:lab.video,
-github:lab.github
-};
+lines.push(
+`"${lab.title}": {"video": "${lab.video}","github": "${lab.github}"}`
+);
 
 });
 
-document.getElementById("output").value=
-JSON.stringify(obj,null,2);
+document.getElementById("output").value =
+lines.join(",\n");
 
 }
+
 
 function copyJSON(){
 
